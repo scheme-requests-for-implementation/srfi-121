@@ -18,7 +18,7 @@ Shiro Kawai, John Cowan, Thomas Gilray
 This SRFI is currently in ``draft'' status.
 To see an explanation of
 each status that a SRFI can hold, see <a
-href="http://srfi.schemers.org/srfi-process.html">here</a>.
+href="http://srfi.speechcode.com/srfi-process.html">here</a>.
 
 To provide input on this SRFI, please
 <a href="mailto:srfi minus 121 at srfi dot schemers dot org">mail to
@@ -368,7 +368,7 @@ one of the generators provided by <var>gen</var> until they are exhausted.
 <dt><code>gintersection</code><i> comparator gen<sub>1</sub> gen<sub>2</sub> &hellip;</i></dt>
 <dd><p>Creates a generator that yields elements out of input generators,
 with the order determined by a
-<a href="http://srfi.schemers.org/srfi-114/srfi-114.html">SRFI 114</a> comparator.
+<a href="http://srfi.speechcode.com/srfi-114/srfi-114.html">SRFI 114</a> comparator.
  <code>Gmerge</code> returns all the elements;
  <code>gunion</code> returns all the elements that are distinct in the sense of the comparator;
  <code>gintersection</code> returns the elements that appear in all of the generators.
@@ -774,7 +774,7 @@ have this signature and cannot be used with this procedure.</p></dd></dl>
 <dt><code>generator-let*</code><i> (binding &hellip;) body body2 &hellip;</i></dt>
 <dd><p>This captures a monadic pattern that frequently appears in generator-related
 code.  It is similar in spirit to <code>and-let*</code> from
-<a href="http://srfi.schemers.org/srfi-2/srfi-2.html">SRFI 2</a>, but returns
+<a href="http://srfi.speechcode.com/srfi-2/srfi-2.html">SRFI 2</a>, but returns
 as soon as an evaluated expression returns an end-of-file object.
 </p>
 <p>The <var>binding</var> part can be either <code>(var expr)</code> or <code>( expr )</code>.
