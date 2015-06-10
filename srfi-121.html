@@ -29,6 +29,8 @@ subscribe to the list.  You can access previous messages via
 </p><ul>
     <li>Received: <a
     href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-121/srfi-121.html?rev=1.1">2015/01/27</a></li>
+    <li>Revised: <a
+    href="http://srfi.schemers.org/cgi-bin/viewcvs.cgi/*checkout*/srfi/srfi-121/srfi-121.html?rev=1.2">2015/06/10</a></li>
       <li>Draft: 2015/02/04-2015/04/04</li>
 </ul>
 
@@ -101,10 +103,10 @@ When no arguments are provided, it returns a null generator that generates no va
 </p></dd></dl>
 
 <dl>
-<dt><code>make-circular-generator</code><i> arg &hellip;</i></dt>
+<dt><code>make-repeating-generator</code><i> arg &hellip;</i></dt>
 <dd><p>Returns an infinite generator that repeats the given arguments forever.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (make-circular-generator 1 2 3) 10)
+<table><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (make-repeating-generator 1 2 3) 10)
   &rArr; (1 2 3 1 2 3 1 2 3 1)
 </pre></td></tr></table>
 
@@ -125,8 +127,8 @@ the generator is infinite.
 </pre></td></tr></table>
 
 <p>If both <var>start</var> and <var>step</var> are exact, the generator
-yields exact numbers; otherwise it yields inexact numbers.  The exactness
-of <var>count</var> does not affect the exactness of the results.
+yields exact numbers; otherwise it yields inexact numbers.  
+It is an error unless <var>count</var> is an exact integer.
 </p>
 <table><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (make-iota-generator +inf.0 1/2 1/3) 6)
   &rArr; (1/2 5/6 7/6 3/2 11/6 13/6)
@@ -160,7 +162,7 @@ of a series of <var>k</var> numbers (by default, an infinite number), namely
 <dd><p>Creates a generator from a coroutine.
 </p>
 <p>The <var>proc</var> argument is a procedure that takes one argument, <var>yield</var>.  When
-called, <code>generate</code> immediately returns
+called, <code>make-coroutine-generator</code> immediately returns
 a generator <var>g</var>.  When <var>g</var> is called, <var>proc</var> runs
 until it calls <var>yield</var>.  Calling <var>yield</var> causes
 the execution of <var>proc</var> to be suspended, and <var>g</var> returns the value passed
@@ -215,7 +217,7 @@ the generator walks across.
 <p>For <code>list->circular-generator</code>, the elements of the list are
 generated repeatedly, giving an infinite generator.</p>
 <p>For <code>reverse-vector->generator</code>, the first value is the item right before
-to the <var>end</var> element, and the last value is the <var>start</var>
+the <var>end</var> element, and the last value is the <var>start</var>
 element.
 For all the others, the first value the generator yields
 is the <var>start</var>-th element, and it ends right before the <var>end</var>-th element.
@@ -259,16 +261,21 @@ are both null generators.
 <dd><p>Returns generators that read the appropriate type of object from the given
 port using <var>reader</var>, <code>read</code>, <code>read-line</code>, <code>read-char</code>, or 
 <code>read-u8</code> respectively.  Whether these are finite or infinite generators
-depends on what <var>input-port</var> is connected to:  a file will correspond
-to a finite generator, whereas a device or socket may be an infinite generator.
+depends on what <var>input-port</var> is connected to:  a file will create
+a finite generator, whereas a device or socket may create an infinite generator.
 </p></dd></dl>
 
 <dl>
 <dt><code>make-for-each-generator</code><i> for-each obj</i></dt>
-<dd><p>A generic generator that converts any collection <var>obj</var> to a generator
-that walks across the <var>obj</var> using the <var>for-each</var> procedure
-appropriate for <var>obj</var>.  This generator is finite if the underlying
-collection is finite, which would typically be the case.
+<dd><p>A generic generator that converts any collection <var>obj</var> to
+a generator that walks through the <var>obj</var> using the
+<var>for-each</var> procedure appropriate for <var>obj</var>.  This must
+be a procedure that when called as <var>(for-each proc obj)</var> calls
+<var>proc</i> on each element of <var>obj</var>.  Examples of such
+procedures are <code>for-each</code>, <code>string-for-each</code>,
+and <code>vector-for-each</code> from R7RS.  The value returned by
+<var>for-each</var> is ignored.  collection is finite, which would
+typically be the case.
 </p></dd>
 
 <dt><code>make-unfold-generator</code><i> stop? mapper successor seed</i></dt>
@@ -366,19 +373,22 @@ one of the generators provided by <var>gen</var> until they are exhausted.
 <dt><code>gmerge</code><i> comparator gen<sub>1</sub> gen<sub>2</sub> &hellip;</i></dt>
 <dt><code>gunion</code><i> comparator gen<sub>1</sub> gen<sub>2</sub> &hellip;</i></dt>
 <dt><code>gintersection</code><i> comparator gen<sub>1</sub> gen<sub>2</sub> &hellip;</i></dt>
-<dd><p>Creates a generator that yields elements out of input generators,
-with the order determined by a
-<a href="http://srfi.schemers.org/srfi-114/srfi-114.html">SRFI 114</a> comparator.
- <code>Gmerge</code> returns all the elements;
- <code>gunion</code> returns all the elements that are distinct in the sense of the comparator;
- <code>gintersection</code> returns the elements that appear in all of the generators.
-</p>
-<p>Each input generator must yield appropriately ordered elements by itself;
-otherwise the result won't be ordered.
-</p>
-<p>If only one generator is given, it is just returned.
-In that case, <var>comparator</var> is ignored.
-</p>
+<dd><p>Creates a generator that yields elements out of input
+generators, in strictly increasing order as determined by a <a
+href="http://srfi.schemers.org/srfi-114/srfi-114.html">SRFI 114</a>
+comparator.  The results differ as follows: <code>gmerge</code> returns
+all the elements; <code>gunion</code> returns all the elements that are
+distinct in the sense of the comparator; <code>gintersection</code>
+returns the elements that appear in all of the generators.  Elements
+generated by the result are drawn from the first generator in which
+they appear.</p>
+
+<p>Each input generator must yield appropriately ordered and distinct
+elements by itself; otherwise the result won't be ordered.</p>
+
+<p>If only one generator is given, it is just returned.  In that case,
+<var>comparator</var> is ignored.</p>
+
 <table><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gmerge &lt; '(1 3 8) '(5) '(2 4)))
   &rArr; '(1 2 3 4 5 8)
 </pre></td></tr></table>
@@ -604,7 +614,7 @@ true, the current value of <var>value-gen</var> is generated, but otherwise not.
 <dl>
 <dt><code>gnth-value</code><i> gen n</i></dt>
 <dd><p>Creates a generator that returns every <var>n</var>th element of <var>gen</var></p>
-<table><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gnth-value (list->generator '(a b c d e f))))
+<table><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gnth-value (list->generator '(a b c d e f)) 2))
   &rArr; (a c e)
 </pre></td></tr></table>
 </dd></dl>
@@ -813,8 +823,47 @@ but sometimes this macro makes the imperative code more readable:
   ;; do some side-effecting stuff with line
   )
 </pre></td></tr></table>
+
+<dt><code>greceive</code><i> formals gexpr body &hellip;</i></dt>
+<dd>
+<p><var>Gexpr</var> is an expression that yields a generator.  It is
+evaluated once.  <var>Formals</var> and <var>body</var> are as described
+in R7RS. Specifically, <var>formals</var> can have any of three forms:
+</p>
+
+<ul><li> (<var>variable<sub>1</sub></var>
+... <var>variable<sub>n</sub></var>): The environment in which
+the <code>greceive</code> is evaluated is extended by binding
+<var>variable<sub>1</sub></var>, ..., <var>variable<sub>n</sub></var>
+to fresh locations. The <var>gexpr</var> is evaluated and invoked
+<var>n</var> times, and the resulting values are stored into those
+locations. (It is an error if <var>gexpr</var> does not generate
+exactly <var>n</var> values.)  </li><li>
+
+<var>variable</var>: The environment in which the <code>greceive</code>
+is extended by binding <var>variable</var> to a fresh
+location. The <var>gexpr</var> is evaluated and invoked until it is
+exhausted.  The resulting values are converted into a newly allocated
+list, and the list is stored in the location bound to <var>variable</var>.
+</li><li>
+
+(<var>variable<sub>1</sub></var> ... <var>variable<sub>n</sub></var>.
+<var>variable<sub>n+1</sub></var>): The environment in which
+the <code>greceive</code> is evaluated is extended by binding
+<var>variable<sub>1</sub></var>, ..., <var>variable<sub>n+1</sub></var>
+to fresh locations. The <var>gexpr</var> is evaluated and invoked
+until it is exhausted. Its first <var>n</var> values are stored
+into the locations bound to <var>variable<sub>1</sub></var>
+... <var>variable<sub>n</sub></var>. Any remaining values are converted
+into a newly allocated list, which is stored into the location bound
+to <var>variable<sub>n+1</sub></var>. (It is an error if <var>gexpr</var>
+does not generate at least <var>n</var> values.)  </li></ul>
+
+<p>In any case, the expressions in <var>body</var> are evaluated
+sequentially in the extended environment. The results of the last
+expression in the body are the values of <code>greceive</code>.</p>
+
 </dd></dl>
-}}}
 
 <H1>Implementation</H1>
 
@@ -855,7 +904,7 @@ DEALINGS IN THE SOFTWARE.</p>
     dot org">Mike Sperber</a></address>
 <!-- Created: Tue Sep 29 19:20:08 EDT 1998 -->
 <!-- hhmts start -->
-Last modified: Wed Feb  4 11:11:46 MET 2015
+Last modified: Wed Jun 10 08:57:14 MST 2015
 <!-- hhmts end -->
   </body>
 </html>
