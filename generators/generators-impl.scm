@@ -402,7 +402,7 @@
 (define (generator->vector! vector at gen)
   (let loop ((value (gen)) (count 0) (at at))
     (cond
-      ((eof-object value) count)
+      ((eof-object? value) count)
       ((>= at (vector-length vector)) count)
       (else (begin
               (vector-set! vector at value)
