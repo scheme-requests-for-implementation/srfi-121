@@ -8,7 +8,7 @@
           make-for-each-generator make-unfold-generator)
   (export gcons* gappend gcombine gfilter gremove 
           gtake gdrop gtake-while gdrop-while
-          gdelete gdelete-neighbor-dups gindex gselect gnth-value)
+          gdelete gdelete-neighbor-dups gindex gselect)
   (export generator->list generator->reverse-list
           generator->vector generator->vector!  generator->string
           generator-fold generator-for-each generator-find

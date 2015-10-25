@@ -306,7 +306,7 @@
                                               (loop (gen))
                                               (begin (set! prev v)
                                                      v))))))
-                     ((gen ==)
+                     ((gen =)
                       (define firsttime #t)
                       (define prev #f)
                       (lambda () (if firsttime
@@ -314,7 +314,7 @@
                                             (set! prev (gen))
                                             prev)
                                      (let loop ((v (gen)))
-                                          (if (== prev v)  ; or (=? == prev v)
+                                          (if (= prev v)
                                               (loop (gen))
                                               (begin (set! prev v)
                                                      v))))))))
@@ -355,19 +355,6 @@
 
 
 ;; gnth-value
-(define (gnth-value gen n)
-  (let ((count 0))
-    (lambda ()
-      (let loop ((value (gen)))
-        (cond
-          ((= 0 (remainder count 0))
-           (set! count (+ count 1))
-           value)
-          (else
-            (set! count (+ count 1))
-            (loop (gen))))))))
-
-
 ;; generator->list
 (define generator->list
         (case-lambda ((gen) (generator->list gen +inf.0))

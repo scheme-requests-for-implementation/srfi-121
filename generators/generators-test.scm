@@ -1,5 +1,6 @@
 (use test)
 (use generators)
+(use srfi-1)
 
 
 (test-group "generators"
@@ -81,10 +82,13 @@
     (test '(0.0 1.0 0 2) (generator->list (gdelete 1
                                                    (make-generator 0.0 1.0 0 1 2))))
     (test '(0.0 0 2) (generator->list (gdelete 1
-                                               (make-generator 0.0 1.0 0 1 2)
-                                               =)))
+                                               (make-generator 0.0 1.0 0 1 2) =)))
+    (test '(1 2 3 4) (generator->list (gdelete-neighbor-dups
+                                        (make-generator 1 2 2 3 3 3 4 4 4 4))))
     (test '(a c e) (generator->list (gindex (list->generator '(a b c d e f))
                                             (list->generator '(0 2 4)))))
+    (test '(a d e) (generator->list (gselect (list->generator '(a b c d e f))
+                                             (list->generator '(#t #f #f #t #t #f)))))
 
   ) ; end "generators/operators"
 
@@ -94,6 +98,9 @@
     (test '(5 4 3 2 1) (generator->reverse-list (make-generator 1 2 3 4 5)))
     (test '#(1 2 3 4 5) (generator->vector (make-generator 1 2 3 4 5)))
     (test '#(1 2 3) (generator->vector (make-generator 1 2 3 4 5) 3))
+    (define v '#(1 2 0 0 0))
+    (generator->vector! v 2 (make-generator 3 4 5))
+    (test v '#(1 2 3 4 5))
     (test "abc" (generator->string (make-generator #\a #\b #\c)))
     (test '(e d c b a . z) (with-input-from-string "a b c d e"
                              (lambda () (generator-fold cons 'z read))))
