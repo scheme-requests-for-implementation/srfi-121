@@ -156,11 +156,10 @@
 
 ;; make-port-generator
 (define make-port-generator
-        (case-lambda ((input-port) (read-line input-port))
-                     ((input-port reader) (reader input-port))))
+         (case-lambda ((input port) (lambda () (read-line input-port)))
+                      ((input-port reader) (lambda () (reader input-port)))))
 
 ;; make-for-each-generator
-;FIXME: seems to fail test
 (define (make-for-each-generator for-each obj)
         (make-coroutine-generator (lambda (yield) (for-each yield obj))))
 
