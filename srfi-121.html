@@ -600,18 +600,19 @@ As a side effect, <var>gen</var> is exhausted.
 
 <dl>
 <dt><code>generator-any</code><i> pred gen</i></dt>
-<dd><p>Returns <code>#t</code> if any of the values available from the generator <var>gen</var> satisfy
-the predicate <var>pred</var>.  After such a value is found, the procedure returns without consuming
-the rest of <var>gen</var>.
-If <var>gen</var> is exhausted, returns <code>#f</code>.
+<dd><p>Applies <i>pred</i> to each item from <i>gen</i>.  As soon
+as it yields a true value, the value is returned without consuming the
+rest of <i>gen</i>.
+If <i>gen</i> is exhausted, returns <code>#f</code>.
 </p></dd></dl>
 
 <dl>
 <dt><code>generator-every</code><i> pred gen</i></dt>
-<dd><p>Returns <code>#f</code> if any of the values available from the generator <var>gen</var> do not satisfy
-the predicate <var>pred</var>.  After such a value is found, the procedure returns without consuming
-the rest of <var>gen</var>.
-If <var>gen</var> is exhausted, returns <code>#t</code>.
+<dd><p>Applies <i>pred</i> to each item from <i>gen</i>.  As soon
+as it yields a false value, the value is returned without consuming the
+rest of <i>gen</i>.
+If <i>gen</i> is exhausted, returns the last value returned by
+<i>pred</i>, or <code>#t</code> if <i>pred</i> was never called.
 </p></dd></dl>
 
 <dl>

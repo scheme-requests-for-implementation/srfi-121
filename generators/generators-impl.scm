@@ -156,7 +156,7 @@
 
 ;; make-port-generator
 (define make-port-generator
-         (case-lambda ((input port) (lambda () (read-line input-port)))
+         (case-lambda ((input-port) (lambda () (read-line input-port)))
                       ((input-port reader) (lambda () (reader input-port)))))
 
 ;; make-for-each-generator
@@ -448,20 +448,17 @@
         (let loop ((v (g)))
              (if (eof-object? v)
                  #f
-                 (if (pred v)
-                     #t
-                     (loop (g))))))
+                 (let ((r (pred v)))
+                   (if (pred v) r (loop (g)))))))
 
 
 ;; generator-every
 (define (generator-every pred g)
-        (let loop ((v (g)))
+        (let loop ((v (g))(r #t))
              (if (eof-object? v)
-                 #t
-                 (if (pred v)
-                     (loop (g))
-                     #f ; the spec would have me return #f, but I think it must simply be wrong...
-                     ))))
+                 r
+                 (let ((newr (pred v)))
+                   (if newr (loop (g) newr) #f)))))
 
 
 ;; generator-unfold 
