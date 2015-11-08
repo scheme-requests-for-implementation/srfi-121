@@ -116,8 +116,13 @@
     (test #t (generator-any odd? g))
     (test '(4) (generator->list g))
     (define g (make-range-generator 2 5))
+    (test 2  (generator-any values g))
+    (test '(3 4) (generator->list g))
+    (define g (make-range-generator 2 5))
     (test #f (generator-every odd? g))
     (test '(3 4) (generator->list g))
+    (test #t (generator-every odd? (make-generator))) ; boundary case
+    (test 5 (generator-every values (make-generator 1 3 5)))
     (test '(0 1 2 3) (generator-unfold (make-range-generator 1 4) unfold 0))
 
   ) ; end "generators/consumers"

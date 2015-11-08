@@ -448,20 +448,20 @@
         (let loop ((v (g)))
              (if (eof-object? v)
                  #f
-                 (if (pred v)
-                     #t
+                 (or (pred v)
                      (loop (g))))))
 
 
 ;; generator-every
 (define (generator-every pred g)
-        (let loop ((v (g)))
+        (let loop ((v (g)) (last #t))
              (if (eof-object? v)
-                 #t
-                 (if (pred v)
-                     (loop (g))
+                 last
+                 (let ((r (pred v)))
+                   (if r
+                     (loop (g) r)
                      #f ; the spec would have me return #f, but I think it must simply be wrong...
-                     ))))
+                     )))))
 
 
 ;; generator-unfold 
