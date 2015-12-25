@@ -43,15 +43,14 @@ A generator is simply a procedure with no arguments that works
 as a source of a series of values.  Every time it is called,
 it yields a value.  Generators may be finite or infinite; a finite
 generator returns an end-of-file object to indicate that it is exhausted.
-For example, <code>read-char</code> is a generator that
-generates characters from the current input port.
+For example, <code>read-char</code>, <code>read-line</code>,
+and <code>read</code> are generators that
+generate characters, lines, and objects from the current input port.
 Generators provide lightweight laziness.
 </p>
 
 
 <h1>Issues</h1>
-<p>The example for generator-unfold is broken; I'll fix it when I
-work out what it should say.</p>
 
 None at present.
 
@@ -80,7 +79,7 @@ side-effecting construct; you can't safely backtrack, for example,
 as you can with streams.
 Persistent lazy sequences based on generators and ordinary Scheme pairs
 (which are heavier weight than generators, but lighter weight
-than lazy pairs) will be the subject of a future SRFI.
+than lazy pairs) is the subject of SRFI 127.
 Of course the efficiency of streams depends on the implementation.
 Some implementations may have have super-light thunk creation.  But in most,
 thunk creation is probably slower than simple consing.</p>
@@ -123,6 +122,19 @@ Special acknowledgements to Kragen Javier Sitaker for his extensive review.</p>
 <p>Generators can be divided into two classes, finite and infinite.  Both kinds of generators can be invoked an indefinite number of times.  After a finite generator has generated all its values, it will return an end-of-file object for all subsequent calls.
 A generator is said to be <i>exhausted</i> if calling it will return an end-of-file object.
 By definition, infinite generators can never be exhausted.</p>
+
+<p>A generator is said to be in an <i>undefined state</i> if it
+cannot be determined exactly how many values it has generated.
+This arises because it is impossible to tell by inspecting a
+generator whether it is exhausted or not.  For example,
+<code>(generator-fold + 0 (generator 1 2 3) (generator 1 2))</code>
+will compute 0 + 1 + 1 + 2 + 2 = 6, at which time the second
+generator will be exhausted.  If the first generator is invoked,
+however, it may return either 3 or an end-of-file object,
+depending on whether the implementation of <code>generator-fold</code>
+has invoked it and discarded its value or not.
+Therefore, the first generator is said to be in an undefined state.
+</p>
 
 <h2 class="subsection">Generator constructors</h2>
 
@@ -215,7 +227,7 @@ it to <code>g</code>.
 <dt><code>reverse-vector-&gt;generator</code><i> vec [ start [ end ] ]</i></dt>
 <dt><code>string-&gt;generator</code><i> str [ start [ end ] ]</i></dt>
 <dt><code>bytevector-&gt;generator</code><i> bytevector [ start [ end ] ]</i></dt>
-<dd><p>These procedures return generators that yield each item in
+<dd><p>These procedures return generators that yield each element of
 the given argument.  Mutating the underlying object will affect the results
 of the generator.
 </p>
@@ -229,12 +241,12 @@ of the generator.
   ⇒ (#\a #\b #\c #\d #\e)
 </pre></td></tr></tbody></table>
 
-<p>The generators returned by the constructors are exhausted once all items are retrieved;
+<p>The generators returned by the constructors are exhausted once all elements are retrieved;
 the optional <var>start</var>-th and <var>end</var>-th arguments can limit the range
 the generator walks across.
 </p>
 
-<p>For <code>reverse-vector-&gt;generator</code>, the first value is the item right before
+<p>For <code>reverse-vector-&gt;generator</code>, the first value is the element right before
 the <var>end</var>-th element, and the last value is the <var>start</var>-th
 element.
 For all the other constructors, the first value the generator yields
@@ -257,7 +269,8 @@ is the <var>start</var>-th element, and it ends right before the <var>end</var>-
 <dt><code>make-bits-generator</code><i> n</i></dt>
 <dd><p>This procedure takes an exact integer
 considered as a twos-complement value and treats it as a sequence of
-boolean values (0 for false and 1 for true), returning them starting with
+boolean values (0 for false and 1 for true).
+It returns a generator that produces these booleans starting with
 the least significant bit.  Note that the infinite sequence of
 high-order 0 or 1 bits are not returned, so this is a finite generator.
 In particular, <code>(make-bits-generator 0)</code> and <code>(make-bits-generator -1)</code>
@@ -270,17 +283,6 @@ are both empty generators.
 </dd></dl>
 
 <dl>
-<dt><code>make-port-generator</code><i> input-port</i> [ <i>reader</i> ]</dt>
-<dd><p>Returns generators that read an object from
-<var>input-port</var> using <var>reader</var>, which defaults to <code>read-line</code>.
-The value of <var>input-port</var> does not have to satisfy <code>input-port?</code>,
-as long as it is acceptable as an argument to <var>reader</var>.
-Whether these are finite or infinite generators
-depends on what <var>input-port</var> is connected to:  a file, string, or bytevector will create
-a finite generator, whereas a device or socket may create an infinite generator.
-(If <var>reader</var> has unusual behavior, the generator may be infinite
-even though the port is finite.)
-Note that <var>input-port</var> is not closed.
 
 </p></dd></dl>
 
@@ -297,7 +299,10 @@ and <code>vector-for-each</code> from R7RS.  The value returned by
 The generator is finite if the  collection is finite, which would
 typically be the case.
 </p>
-<p>The following procedure allows <code>for-each-generator</code> to generate
+<p>The collections need not be conventional ones (lists, strings, etc.)
+as long as <i>for-each</i> can invoke a procedure on everything that
+counts as a member.  For example,
+the following procedure allows <code>for-each-generator</code> to generate
 the digits of an integer from least to most significant:</p>
 
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(define (for-each-digit proc n)
@@ -383,6 +388,8 @@ where <var>v<sub>1</sub></var>, <var>v<sub>2</sub></var>, … are
 the values yielded from the input generators, and <var>seed</var> is the
 current seed value.  It must return two values, the yielding value
 and the next seed.
+The result generator is exhausted when any of the <i>gen<sub>n</sub></i>
+generators is exhausted, at which time all the others are in an undefined state.
 </p>
 </dd></dl>
 
@@ -398,7 +405,7 @@ except those on which <var>pred</var> answers false or true respectively.
 <dl>
 <dt><code>gtake</code><i> gen k [ padding ]</i></dt>
 <dt><code>gdrop</code><i> gen k</i></dt>
-<dd><p>These generator analogues of SRFI 1
+<dd><p>These are generator analogues of SRFI 1
 <code>take</code> and <code>drop</code>. <code>Gtake</code> returns a generator
 that yields (at most) the first <var>k</var> items
 of the source generator, while <code>gdrop</code> returns a generator
@@ -426,6 +433,8 @@ while <var>pred</var> returns true for them, then starts yielding items returned
 <dt><code>gdelete</code><i> item gen [ = ]</i></dt>
 <dd><p>Creates a generator that returns whatever <var>gen</var> returns, except for any items that
 are the same as <var>item</var> in the sense of <var>=</var>, which defaults to <code>equal?</code>.
+The <var>=</var> predicate is passed exactly two arguments, of which the first was generated
+by <var>gen</var> before the second.
 </p>
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gdelete 3 (make-generator 1 2 3 4 5 3 6 7)))
   ⇒ (1 2 4 5 6 7)
@@ -433,9 +442,11 @@ are the same as <var>item</var> in the sense of <var>=</var>, which defaults to 
 </dd></dl>
 
 <dl>
-<dt><code>gdelete-neighbor-dups</code><i> gen [ pred ]</i></dt>
+<dt><code>gdelete-neighbor-dups</code><i> gen [ = ]</i></dt>
 <dd><p>Creates a generator that returns whatever <var>gen</var> returns, except for any items
-that are equal to the preceding item in the sense of <var>pred</var>, which defaults to <code>equal?</code>.
+that are equal to the preceding item in the sense of <var>=</var>, which defaults to <code>equal?</code>.
+The <var>=</var> predicate is passed exactly two arguments, of which the first was generated
+by <var>gen</var> before the second.
 </p>
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gdelete-neighbor-dups (list-&gt;generator '(a a b c a a a d c))))
   ⇒ (a b c a d c)
@@ -449,8 +460,8 @@ specified by the indices (non-negative exact integers) generated by
 <var>index-gen</var>.  It is an error if the indices are not strictly
 increasing, or if any index exceeds the number of elements generated by
 <var>value-gen</var>.
-The generator is exhausted when either source generator is.
-If only one is exhausted, the elements in the other are still available.
+The result generator is exhausted when either generator
+is exhausted, at which time the other is in an undefined state.
 </p>
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gindex (list-&gt;generator '(a b c d e f))
                          (list-&gt;generator '(0 2 4))))
@@ -464,8 +475,8 @@ If only one is exhausted, the elements in the other are still available.
 that correspond to the values generated by
 <var>truth-gen</var>.  If the current value of <var>truth-gen</var> is
 true, the current value of <var>value-gen</var> is generated, but otherwise not.
-When either generator is exhausted, the result generator is also exhausted;
-the other generator will not be called again.
+The result generator is exhausted when either generator
+is exhausted, at which time the other is in an undefined state.
 </p>
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gselect (list-&gt;generator '(a b c d e f))
                           (list-&gt;generator '(#t #f #f #t #t #f))))
@@ -478,7 +489,7 @@ the other generator will not be called again.
 
 <p>Unless otherwise noted,
 these procedures consume all the values available from the generator that is passed to them.
-They have names prefixed with <code>generator-</code>.
+They have names prefixed with <code>generator</code>.
 </p>
 
 <dl>
@@ -558,8 +569,9 @@ from <code>generator-fold</code>.
 </p>
 <p>When more than one generator is given, <var>proc</var> is
 invoked on the values returned by all the generator arguments followed by
-the current accumulated result.  The iteration terminates when
-any of the generators returns an end-of-file object.
+the current accumulated result.  
+The procedure terminates when any of the <i>gen<sub>n</sub></i>
+generators is exhausted, at which time all the others are in an undefined state.
 </p>
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(with-input-from-string "a b c d e"
   (lambda () (generator-fold cons 'z read)))
@@ -573,6 +585,8 @@ any of the generators returns an end-of-file object.
 Repeatedly applies <var>proc</var> on
 the values yielded by <var>gen</var>, <var>gen<sub>2</sub></var> … until any one of
 the generators is exhausted.  The values returned from <var>proc</var> are discarded.
+The procedure terminates when any of the <i>gen<sub>n</sub></i>
+generators is exhausted, at which time all the others are in an undefined state.
 Returns an unspecified value.
 </p></dd></dl>
 
@@ -624,10 +638,12 @@ Equivalent to <code>(</code><var>unfold</var> <code>eof-object? (lambda (x) x)
 The values of <var>gen</var>
 are unfolded into the collection that <var>unfold</var> creates.
 </p>
-<p>The signature of the <var>unfold</var> procedure is <code>(</code><var>unfold stop? mapper successor args ...</var><code>)</code>.
-Note that <a href="http://srfi.schemers.org/srfi-43/srfi-43.html">SRFI 43's</a>
-<code>vector-unfold</code> and <code>vector-unfold-right</code> do not
-have this signature and cannot be used with this procedure.
+<p>The signature of the <var>unfold</var> procedure is <code>(</code><var>unfold stop? mapper successor seed args ...</var><code>)</code>.
+Note that the
+<code>vector-unfold</code> and <code>vector-unfold-right</code> 
+of <a href="http://srfi.schemers.org/srfi-43/srfi-43.html">SRFI 43</a>
+and <a href="http://srfi.schemers.org/srfi-133/srfi-133.html">SRFI 133</a>
+do not have this signature and cannot be used with this procedure.
 To unfold into a vector, use SRFI 1's <code>unfold</code> and then apply <code>list-&gt;vector</code>
 to the result.
 </p>
