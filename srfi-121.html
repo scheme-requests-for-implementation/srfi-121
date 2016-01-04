@@ -103,9 +103,10 @@ or returning multiple values.
 </p>
 
 <p> The combination of <code>make-for-each-generator</code> and
-<code>generator-unfold</code> makes it possible to convert any collection
-that has a for-each procedure into any collection that has an unfold
-constructor.</p>
+<code>generator-unfold</code> makes it possible to convert any
+collection that has a for-each procedure into any collection that has
+an unfold constructor.  This generalizes such conversion procedures as
+<code>&list-&gt;vector</code> and <code>string-&gt;list</code>.</p>
 
 <p>These procedures are drawn from the Gauche core and the Gauche
 module <code>gauche.generator</code>, with
@@ -133,7 +134,7 @@ will compute 0 + 1 + 1 + 2 + 2 = 6, at which time the second
 generator will be exhausted.  If the first generator is invoked,
 however, it may return either 3 or an end-of-file object,
 depending on whether the implementation of <code>generator-fold</code>
-has invoked it and discarded its value or not.
+has invoked it or not.
 Therefore, the first generator is said to be in an undefined state.
 </p>
 
@@ -145,7 +146,7 @@ we use <code>generator-&gt;list</code> to convert the generator to a list.
 </p>
 <p>These procedures have names ending with <code>generator</code>.</p>
 <dl>
-<dt><code>make-generator</code><i> arg …</i></dt>
+<dt><code>generator</code><i> arg …</i></dt>
 <dd><p>The simplest finite generator.  Generates each of its arguments in turn.
 When no arguments are provided, it returns an empty generator that generates no values.
 </p></dd></dl>
@@ -437,7 +438,7 @@ are the same as <var>item</var> in the sense of <var>=</var>, which defaults to 
 The <var>=</var> predicate is passed exactly two arguments, of which the first was generated
 by <var>gen</var> before the second.
 </p>
-<table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gdelete 3 (make-generator 1 2 3 4 5 3 6 7)))
+<table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (gdelete 3 (generator 1 2 3 4 5 3 6 7)))
   ⇒ (1 2 4 5 6 7)
 </pre></td></tr></tbody></table>
 </dd></dl>
@@ -489,7 +490,8 @@ is exhausted, at which time the other is in an undefined state.
 <h2 class="subsection">Consuming generated values</h2>
 
 <p>Unless otherwise noted,
-these procedures consume all the values available from the generator that is passed to them.
+these procedures consume all the values available from the generator that is passed to them,
+and therefore will not return if one or more generator arguments are infinite.
 They have names prefixed with <code>generator</code>.
 </p>
 
@@ -497,46 +499,37 @@ They have names prefixed with <code>generator</code>.
 <dt><code>generator-&gt;list</code><i> generator [ k ]</i></dt>
 <dd><p>Reads items from <var>generator</var> and returns a
 newly allocated list of them.
-By default, it reads until the generator is exhausted.  If
+By default, it reads until the generator is exhausted.</p><p>If
 an optional argument <var>k</var> is given, it must be a non-negative
 integer, and the list ends when either <var>k</var> items are consumed,
-or the generator is exhausted.
-</p>
-<p>Be careful not to pass an infinite generator to this procedure without
-specifying <var>k</var>, or this procedure will not return.
+or <i>generator</i> is exhausted; therefore <i>generator</i> can be infinite in this case.
 </p></dd></dl>
 
 <dl>
 <dt><code>generator-&gt;reverse-list</code><i> generator [ k ]</i></dt>
 <dd><p>Reads items from <var>generator</var> and returns a
 newly allocated list of them in reverse order.
-By default, this reads until the generator is exhausted.  If
+By default, this reads until the generator is exhausted.</p><p>If
 an optional argument <var>k</var> is given, it must be a non-negative
 integer, and the list ends when either <var>k</var> items are read,
-or the generator is exhausted.
-</p>
-<p>Be careful not to pass an infinite generator to this procedure without
-specifying <var>k</var>, or this procedure will not return.
+or <i>generator</i> is exhausted; therefore <i>generator</i> can be infinite in this case.
 </p></dd></dl>
 
 <dl>
 <dt><code>generator-&gt;vector</code><i> generator [ k ]</i></dt>
 <dd><p>Reads items from <var>generator</var> and returns a
 newly allocated vector of them.
-By default, it reads until the generator is exhausted.  If
+By default, it reads until the generator is exhausted.</p><p>If
 an optional argument <var>k</var> is given, it must be a non-negative
 integer, and the list ends when either <var>k</var> items are consumed,
-or the generator is exhausted.
-</p>
-<p>Be careful not to pass an infinite generator to this procedure without
-specifying <var>k</var>, or this procedure will not return.
+or <i>generator</i> is exhausted; therefore <i>generator</i> can be infinite in this case.
 </p></dd></dl>
 
 <dl>
 <dt><code>generator-&gt;vector!</code><i> vector at generator</i></dt>
 <dd><p>Reads items from <var>generator</var> and puts them into
 <var>vector</var> starting at index <var>at</var>, until <var>vector</var> is full or
-<var>generator</var> is exhausted.  The number of elements
+<var>generator</var> is exhausted.  <i>Generator</i> can be infinite.  The number of elements
 generated is returned.
 </p>
 </dd></dl>
@@ -545,13 +538,10 @@ generated is returned.
 <dt><code>generator-&gt;string</code><i> generator [ k ]</i></dt>
 <dd><p>Reads items from <var>generator</var> and returns a
 newly allocated string of them.  It is an error if the items are not characters.
-By default, it reads until the generator is exhausted.  If
+By default, it reads until the generator is exhausted.</p><p>If
 an optional argument <var>k</var> is given, it must be a non-negative
 integer, and the string ends when either <var>k</var> items are consumed,
-or the generator is exhausted.
-</p>
-<p>Be careful not to pass an infinite generator to this procedure without
-specifying <var>k</var>, or this procedure will not return.
+or <i>generator</i> is exhausted; therefore <i>generator</i> can be infinite in this case.
 </p></dd></dl>
 
 <dl>
@@ -602,16 +592,9 @@ if it cannot find an appropriate item.
 </p></dd></dl>
 
 <dl>
-<dt><code>generator-length</code><i> gen</i></dt>
-<dd><p>Returns the number of items available from the generator <var>gen</var>.
-As a side effect, <var>gen</var> is exhausted.
-</p></dd></dl>
-
-<dl>
 <dt><code>generator-count</code><i> pred gen</i></dt>
 <dd><p>Returns the number of items available from the generator <var>gen</var> that satisfy
 the predicate <var>pred</var>.
-As a side effect, <var>gen</var> is exhausted.
 </p></dd></dl>
 
 <dl>
@@ -635,7 +618,7 @@ If <i>gen</i> is exhausted, returns the last value returned by
 <dt><code>generator-unfold</code><i> gen unfold arg ...</i></dt>
 <dd><p>
 Equivalent to <code>(</code><var>unfold</var> <code>eof-object? (lambda (x) x)
-(lambda (x) (</code><var>gen</var><code>)</code> <var>arg</var> ...<code>)</code>.
+(lambda (x) (</code><var>gen</var><code>)) (</code><var>gen</var><code>)</code> <var>arg</var> ...<code>)</code>.
 The values of <var>gen</var>
 are unfolded into the collection that <var>unfold</var> creates.
 </p>
