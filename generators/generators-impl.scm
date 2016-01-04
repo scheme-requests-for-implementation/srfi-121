@@ -1,4 +1,4 @@
-;; Chibi Scheme versions of any, every, unfold
+;; Chibi Scheme versions of any and every
 
 (define (any pred ls)
   (if (null? (cdr ls))
@@ -10,15 +10,10 @@
       (pred (car ls))
       (if (pred (car ls)) (every pred (cdr ls)) #f)))
 
-(define (unfold p f g seed . o)
-  (let lp ((seed seed))
-    (if (p seed)
-        (if (pair? o) ((car o) seed) '())
-        (cons (f seed) (lp (g seed))))))
 
 
-;; make-generator
-(define (make-generator . args)
+;; generator
+(define (generator . args)
         (lambda () (if (null? args)
                        (eof-object)
                        (let ((next (car args)))
@@ -154,12 +149,8 @@
         
 
 
-;; make-port-generator
-(define make-port-generator
-         (case-lambda ((input-port) (lambda () (read-line input-port)))
-                      ((input-port reader) (lambda () (reader input-port)))))
-
 ;; make-for-each-generator
+;FIXME: seems to fail test
 (define (make-for-each-generator for-each obj)
         (make-coroutine-generator (lambda (yield) (for-each yield obj))))
 
@@ -258,10 +249,11 @@
 (define (gdrop-while pred gen)
         (define (skip)
                 (let ((next (gen)))
-                     (if (pred next)
-                         (skip)
-                         (begin (set! gen (gcons* next gen))
-                                (set! skip #f)))))
+                     (cond
+                        ((eof-object? next) gen)
+                        ((pred next) (skip))
+                        (else (set! gen (gcons* next gen))
+                               (set! skip #f)))))
         (lambda () (when skip (skip))
                    (gen)))
              
@@ -274,7 +266,7 @@
                             next
                             (if (pred next)
                                 next
-                                (begin (set! gen (make-generator))
+                                (begin (set! gen (generator))
                                        (gen)))))))
              
 
@@ -294,6 +286,8 @@
 ;; gdelete-neighbor-dups
 (define gdelete-neighbor-dups
         (case-lambda ((gen)
+                      (gdelete-neighbor-dups gen equal?))
+                     ((gen ==)
                       (define firsttime #t)
                       (define prev #f)
                       (lambda () (if firsttime
@@ -301,22 +295,14 @@
                                             (set! prev (gen))
                                             prev)
                                      (let loop ((v (gen)))
-                                          (if (equal? prev v)
-                                              (loop (gen))
-                                              (begin (set! prev v)
-                                                     v))))))
-                     ((gen =)
-                      (define firsttime #t)
-                      (define prev #f)
-                      (lambda () (if firsttime
-                                     (begin (set! firsttime #f)
-                                            (set! prev (gen))
-                                            prev)
-                                     (let loop ((v (gen)))
-                                          (if (= prev v)
-                                              (loop (gen))
-                                              (begin (set! prev v)
-                                                     v))))))))
+                                          (cond
+                                            ((eof-object? v)
+                                              v)
+                                            ((== prev v)
+                                             (loop (gen)))
+                                            (else
+                                             (set! prev v)
+                                              v))))))))
 
 
 ;; gindex
@@ -354,6 +340,19 @@
 
 
 ;; gnth-value
+(define (gnth-value gen n)
+  (let ((count 0))
+    (lambda ()
+      (let loop ((value (gen)))
+        (cond
+          ((= 0 (remainder count 0))
+           (set! count (+ count 1))
+           value)
+          (else
+            (set! count (+ count 1))
+            (loop (gen))))))))
+
+
 ;; generator->list
 (define generator->list
         (case-lambda ((gen) (generator->list gen +inf.0))
@@ -433,11 +432,6 @@
                       (loop (g)))))
 
 
-;; generator-length
-(define (generator-length g)
-        (generator-fold (lambda (v n) (+ 1 n)) 0 g))
-
-
 ;; generator-count
 (define (generator-count pred g)
         (generator-fold (lambda (v n) (if (pred v) (+ 1 n) n)) 0 g))
@@ -448,17 +442,20 @@
         (let loop ((v (g)))
              (if (eof-object? v)
                  #f
-                 (let ((r (pred v)))
-                   (if (pred v) r (loop (g)))))))
+                 (if (pred v)
+                     #t
+                     (loop (g))))))
 
 
 ;; generator-every
 (define (generator-every pred g)
-        (let loop ((v (g))(r #t))
+        (let loop ((v (g)))
              (if (eof-object? v)
-                 r
-                 (let ((newr (pred v)))
-                   (if newr (loop (g) newr) #f)))))
+                 #t
+                 (if (pred v)
+                     (loop (g))
+                     #f ; the spec would have me return #f, but I think it must simply be wrong...
+                     ))))
 
 
 ;; generator-unfold 

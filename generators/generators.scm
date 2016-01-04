@@ -6,19 +6,18 @@
   (import (only extras read-line))
   (require-library srfi-4)
   (import (only srfi-4 u8vector-ref u8vector-length))
-  (export make-generator make-iota-generator make-range-generator
+  (export generator make-iota-generator make-range-generator
           make-coroutine-generator list->generator vector->generator
           reverse-vector->generator string->generator
-          bytevector->generator make-bits-generator make-port-generator
+          bytevector->generator make-bits-generator
           make-for-each-generator make-unfold-generator)
   (export gcons* gappend gcombine gfilter gremove 
           gtake gdrop gtake-while gdrop-while
-          gdelete gdelete-neighbor-dups gindex gselect)
+          gdelete gdelete-neighbor-dups gindex gselect gnth-value)
   (export generator->list generator->reverse-list
           generator->vector generator->vector!  generator->string
           generator-fold generator-for-each generator-find
-          generator-length generator-count generator-any generator-every
-          generator-unfold)
+          generator-count generator-any generator-every generator-unfold)
   (include "r7rs-shim.scm")
   (include "generators-impl.scm")
 )
