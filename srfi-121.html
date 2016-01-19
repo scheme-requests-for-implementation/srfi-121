@@ -269,23 +269,6 @@ is the <var>start</var>-th element, and it ends right before the <var>end</var>-
 </dd></dl>
 
 <dl>
-<dt><code>make-bits-generator</code><i> n</i></dt>
-<dd><p>This procedure takes an exact integer
-considered as a twos-complement value and treats it as a sequence of
-boolean values (0 for false and 1 for true).
-It returns a generator that produces these booleans starting with
-the least significant bit.  Note that the infinite sequence of
-high-order 0 or 1 bits are not returned, so this is a finite generator.
-In particular, <code>(make-bits-generator 0)</code> and <code>(make-bits-generator -1)</code>
-are both empty generators.
-</p>
-<table><tbody><tr><td>&nbsp;</td><td><pre class="example">(generator-&gt;list (make-bits-generator #b10110))
- ⇒ (#f #t #t #f #t)
-</pre></td></tr></tbody></table>
-
-</dd></dl>
-
-<dl>
 
 </p></dd></dl>
 
