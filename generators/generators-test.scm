@@ -102,7 +102,7 @@
     (define g (make-range-generator 2 5))
     (test #f (generator-every odd? g))
     (test '(3 4) (generator->list g))
-    (test '(#\a #\b #\c) (generator-unfold unfold (make-for-each-generator string-for-each "abc")))
+    (test '(#\a #\b #\c) (generator-unfold (make-for-each-generator string-for-each "abc") unfold))
 
   ) ; end "generators/consumers"
 

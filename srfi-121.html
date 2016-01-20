@@ -620,7 +620,7 @@ to the result.
 <table>
 <tbody><tr><td>&nbsp;</td><td><pre class="example">
 ;; Iterates over string and unfolds into a list using SRFI 1 unfold
-(generator-unfold unfold (make-for-each-generator string-for-each "abc"))
+(generator-unfold (make-for-each-generator string-for-each "abc") unfold)
   ⇒ (#\a #\b #\c)
 </pre></td></tr> </tbody></table>
 </dd></dl>

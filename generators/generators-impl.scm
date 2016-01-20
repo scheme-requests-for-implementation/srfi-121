@@ -177,7 +177,7 @@
     (define items (map (lambda (x) (x)) gens))
     (if (any eof-object? items)
       (eof-object)
-      (begin
+      (let ()
         (define-values (value newseed) (apply proc (append items (list seed))))
         (set! seed newseed)
         value))))
@@ -419,7 +419,7 @@
 
 ;; generator-unfold 
 (define (generator-unfold g unfold . args)
-        (apply unfold eof-object? (lambda (x) x) (lambda (x) (g)) args))
+        (apply unfold eof-object? (lambda (x) x) (lambda (x) (g)) (g) args))
 
 
 
