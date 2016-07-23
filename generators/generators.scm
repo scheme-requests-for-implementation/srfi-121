@@ -18,6 +18,6 @@
           generator->vector generator->vector!  generator->string
           generator-fold generator-for-each generator-find
           generator-count generator-any generator-every generator-unfold)
-  (include "r7rs-shim.scm")
-  (include "generators-impl.scm")
+  (include "generators/r7rs-shim.scm")
+  (include "generators/generators-impl.scm")
 )
