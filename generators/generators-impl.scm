@@ -316,11 +316,12 @@
 (define generator->list
   (case-lambda ((gen) (generator->list gen +inf.0))
                ((gen n)
-                (let ((next (gen)))
-                 (if (or (eof-object? next)
-                         (= 0 n))
-                   '()
-                   (cons next (generator->list gen (- n 1))))))))
+                (if (= 0 n)
+                  '()
+                  (let ((next (gen)))
+                   (if (eof-object? next)
+                     '()
+                     (cons next (generator->list gen (- n 1)))))))))
 
 
 
