@@ -1,5 +1,5 @@
 (use test)
-(use generators)
+(use srfi-121)
 (use (only srfi-1 unfold))
 (use (only srfi-13 string-for-each))
 
