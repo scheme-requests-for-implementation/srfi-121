@@ -2,6 +2,7 @@
 (use srfi-121)
 (use (only srfi-1 unfold))
 (use (only srfi-13 string-for-each))
+(use srfi-4)
 
 (test-group "generators"
   (test-group "generators/constructors"
@@ -21,7 +22,7 @@
     (test '(1 2 3 4 5) (generator->list (vector->generator '#(1 2 3 4 5))))
     (test '(5 4 3 2 1) (generator->list (reverse-vector->generator '#(1 2 3 4 5))))
     (test '(#\a #\b #\c #\d #\e) (generator->list (string->generator "abcde")))
-    (test '(10 20 30) (generator->list (bytevector->generator #u8(10 20 30))))
+    (test '(10 20 30) (generator->list (bytevector->generator (u8vector 10 20 30))))
     (define (for-each-digit proc n)
       (when (> n 0)
         (let-values (((div rem) (truncate/ n 10)))
