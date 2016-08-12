@@ -311,31 +311,19 @@
           (truth value)
           (else (loop (value-gen) (truth-gen)))))))))
 
-
 ;; generator->list
 (define generator->list
-  (case-lambda ((gen) (generator->list gen +inf.0))
-               ((gen n)
-                (if (= 0 n)
-                  '()
-                  (let ((next (gen)))
-                   (if (eof-object? next)
-                     '()
-                     (cons next (generator->list gen (- n 1)))))))))
-
-
+  (case-lambda ((gen n)
+		(generator->list (gtake gen n)))
+               ((gen)
+		(reverse (generator->reverse-list gen)))))
 
 ;; generator->reverse-list
 (define generator->reverse-list
-  (case-lambda ((gen) (generator->reverse-list gen +inf.0))
-               ((gen n)
-                (define (build-reversed lst m)
-                  (let ((next (gen)))
-                   (if (or (eof-object? next)
-                           (>= m n))
-                     lst
-                     (build-reversed (cons next lst) (+ 1 m)))))
-                (build-reversed '() 0))))
+  (case-lambda ((gen n)
+		(generator->reverse-list (gtake gen n)))
+               ((gen)
+		(generator-fold cons '() gen))))
 
 ;; generator->vector
 (define generator->vector
