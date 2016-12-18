@@ -28,7 +28,9 @@
         (let-values (((div rem) (truncate/ n 10)))
           (proc rem)
           (for-each-digit proc div))))
-;    (test '(1 2 3 4 5) (generator-for-each for-each-digit 12345))
+     (test '(5 4 3 2 1) (generator->list
+			 (make-for-each-generator for-each-digit
+						  12345)))
     (test '(0 2 4 6 8 10) (generator->list
                             (make-unfold-generator
                               (lambda (s) (> s 5))
@@ -76,9 +78,9 @@
     (test '(1 2 3) (generator->list (gdelete-neighbor-dups
                                       (generator 1 1 2 3 3 3)
                                       =)))
-    #;(test '() (generator->list (gdelete-neighbor-dups
-                                 (generator 1 2 3)
-                                 (lambda args #t))))
+    (test '(1) (generator->list (gdelete-neighbor-dups
+				(generator 1 2 3)
+				(lambda args #t))))
   ) ; end "generators/operators"
 
   (test-group "generators/consumers"
