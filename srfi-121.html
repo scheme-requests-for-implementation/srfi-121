@@ -85,7 +85,7 @@ side-effecting construct; you can't safely backtrack, for example,
 as you can with streams.
 Persistent lazy sequences based on generators and ordinary Scheme pairs
 (which are heavier weight than generators, but lighter weight
-than lazy pairs) is the subject of SRFI 127.
+than lazy pairs) are the subject of SRFI 127.
 Of course the efficiency of streams depends on the implementation.
 Some implementations may have have super-light thunk creation.  But in most,
 thunk creation is probably slower than simple consing.</p>
@@ -111,7 +111,7 @@ or returning multiple values.
 <code>generator-unfold</code> makes it possible to convert any
 collection that has a for-each procedure into any collection that has
 an unfold constructor.  This generalizes such conversion procedures as
-<code>&list-&gt;vector</code> and <code>string-&gt;list</code>.</p>
+<code>list-&gt;vector</code> and <code>string-&gt;list</code>.</p>
 
 <p>These procedures are drawn from the Gauche core and the Gauche
 module <code>gauche.generator</code>, with
@@ -216,7 +216,7 @@ If <var>proc</var> returns, it is the end of the sequence — <var>g</var> retur
 end-of-file object from then on.  The return value of <var>proc</var> is ignored.
 </p>
 <p>The following code creates a generator that produces a series
-0, 1, and 2 (effectively the same as <code>(make-range-generator 0 3)</code> and binds
+0, 1, and 2 (effectively the same as <code>(make-range-generator 0 3)</code>) and binds
 it to <code>g</code>.
 </p>
 <table><tbody><tr><td>&nbsp;</td><td><pre class="example">(define g
