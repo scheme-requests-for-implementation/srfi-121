@@ -1,6 +1,8 @@
 * SRFI 121: Generators
 
-** by Shiro Kawai, John Cowan, Thomas Gilray
+** by Shiro Kawai, John Cowan, and Thomas Gilray
+
+
 
 This repository hosts [[https://srfi.schemers.org/srfi-121/][SRFI 121]]: Generators, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
 
